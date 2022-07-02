@@ -224,6 +224,10 @@ class AutoExitBlockRule extends InsertRule {
 class PreserveInlineStylesRule extends InsertRule {
   const PreserveInlineStylesRule();
 
+  bool containsLinkOrMention(Map<String, dynamic> attributes) =>
+      attributes.containsKey(ParchmentAttribute.link.key) ||
+      attributes.containsKey(ParchmentAttribute.mention.key);
+
   @override
   Delta? apply(Delta document, int index, Object data) {
     // There is no other text around embeds so no inline styles to preserve.
@@ -242,9 +246,9 @@ class PreserveInlineStylesRule extends InsertRule {
     if (previousText.contains('\n')) return null;
 
     final attributes = previous.attributes;
-    final hasLink = (attributes != null &&
-        attributes.containsKey(ParchmentAttribute.link.key));
-    if (!hasLink) {
+    final hasLinkOrMention =
+        (attributes != null && containsLinkOrMention(attributes));
+    if (!hasLinkOrMention) {
       return Delta()
         ..retain(index)
         ..insert(data, attributes);
@@ -252,25 +256,43 @@ class PreserveInlineStylesRule extends InsertRule {
     // Special handling needed for inserts inside fragments with link attribute.
     // Link style should only be preserved if insert occurs inside the fragment.
     // Link style should NOT be preserved on the boundaries.
-    var noLinkAttributes = previous.attributes!;
-    noLinkAttributes.remove(ParchmentAttribute.link.key);
-    final noLinkResult = Delta()
+    // Mention style should be removed if there is insert inside or after it.
+    Map<String, dynamic>? noLinkAndMentionAttributes = previous.attributes!;
+    noLinkAndMentionAttributes.remove(ParchmentAttribute.link.key);
+    noLinkAndMentionAttributes.remove(ParchmentAttribute.mention.key);
+    noLinkAndMentionAttributes =
+        noLinkAndMentionAttributes.isEmpty ? null : noLinkAndMentionAttributes;
+    final noLinkAndMentionResult = Delta()
       ..retain(index)
-      ..insert(data, noLinkAttributes.isEmpty ? null : noLinkAttributes);
+      ..insert(data, noLinkAndMentionAttributes);
     final next = iter.next();
     final nextAttributes = next.attributes ?? const <String, dynamic>{};
-    if (!nextAttributes.containsKey(ParchmentAttribute.link.key)) {
-      // Next fragment is not styled as link.
-      return noLinkResult;
+    if (!containsLinkOrMention(nextAttributes)) {
+      // Next fragment is not styled as link or mention.
+      return noLinkAndMentionResult;
     }
+    if (nextAttributes.containsKey(ParchmentAttribute.mention.key) &&
+        nextAttributes[ParchmentAttribute.mention.key] ==
+            attributes![ParchmentAttribute.mention.key]) {
+      return Delta()
+        ..retain(index - previousText.length)
+        ..retain(
+            previous.length, attributes..[ParchmentAttribute.mention.key] = null)
+        ..insert(data, noLinkAndMentionAttributes)
+        ..retain(
+            next.length, nextAttributes..[ParchmentAttribute.mention.key] = null);
+    }
+
     // We must make sure links are identical in previous and next operations.
     if (attributes![ParchmentAttribute.link.key] ==
         nextAttributes[ParchmentAttribute.link.key]) {
+      var noMentionAttributes = attributes..remove(ParchmentAttribute.mention.key);
       return Delta()
         ..retain(index)
-        ..insert(data, attributes);
+        ..insert(
+            data, noMentionAttributes.isEmpty ? null : noMentionAttributes);
     } else {
-      return noLinkResult;
+      return noLinkAndMentionResult;
     }
   }
 }

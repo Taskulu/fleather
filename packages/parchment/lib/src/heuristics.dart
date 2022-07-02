@@ -45,6 +45,7 @@ class ParchmentHeuristics {
     deleteRules: [
       EnsureEmbedLineRule(),
       PreserveLineStyleOnMergeRule(),
+      UnsetMentionRule(),
       CatchAllDeleteRule(),
     ],
   );

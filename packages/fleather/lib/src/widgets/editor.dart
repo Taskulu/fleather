@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:fleather/src/widgets/mention_suggestion_overlay.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -399,6 +400,23 @@ class _FleatherEditorSelectionGestureDetectorBuilder
     }
   }
 
+  void _handleTextSegmentClick(TapUpDetails details) {
+    final pos = renderEditor!.getPositionForOffset(details.globalPosition);
+    final result = editor!.widget.controller.document.lookupLine(pos.offset);
+    if (result.node == null) return;
+    final line = result.node as LineNode;
+    final segmentResult = line.lookup(result.offset);
+    if (segmentResult.node == null) return;
+    final segment = segmentResult.node as LeafNode;
+    if (segment.style.contains(ParchmentAttribute.mention)) {
+      if (editor!.widget.readOnly) {
+        editor!.widget.controller.mentionOptions?.onMentionClicked?.call(
+            segment.style.get(ParchmentAttribute.mention)!.value!,
+            segment.toPlainText());
+      }
+    }
+  }
+
   bool isShiftClick(PointerDeviceKind deviceKind) {
     final pressed = RawKeyboard.instance.keysPressed;
     return deviceKind == PointerDeviceKind.mouse &&
@@ -409,6 +427,8 @@ class _FleatherEditorSelectionGestureDetectorBuilder
   @override
   void onSingleTapUp(TapUpDetails details) {
     editor!.hideToolbar();
+
+    _handleTextSegmentClick(details);
 
     if (delegate.selectionEnabled) {
       switch (Theme.of(_state.context).platform) {
@@ -739,6 +759,7 @@ class RawEditorState extends EditorState
   AnimationController get floatingCursorResetController =>
       _floatingCursorResetController;
   late AnimationController _floatingCursorResetController;
+  MentionSuggestionOverlay? _suggestionOverlay;
 
   final ClipboardStatusNotifier? _clipboardStatus =
       kIsWeb ? null : ClipboardStatusNotifier();
@@ -909,6 +930,7 @@ class RawEditorState extends EditorState
 
   void _updateSelectionOverlayForScroll() {
     _selectionOverlay?.updateForScroll();
+    _suggestionOverlay?.updateForScroll();
   }
 
   // State lifecycle:
@@ -1057,20 +1079,69 @@ class RawEditorState extends EditorState
       _cursorController.startCursorTimer();
     }
 
-    // Refresh selection overlay after the build step had a chance to
+    // Refresh selection and suggestion overlay after the build step had a chance to
     // update and register all children of RenderEditor. Otherwise this will
     // fail in situations where a new line of text is entered, which adds
-    // a new RenderEditableBox child. If we try to update selection overlay
+    // a new RenderEditableBox child. If we try to update overlay
     // immediately it'll not be able to find the new child since it hasn't been
     // built yet.
-    SchedulerBinding.instance.addPostFrameCallback(
-        (Duration _) => _updateOrDisposeSelectionOverlayIfNeeded());
+    SchedulerBinding.instance.addPostFrameCallback((Duration _) {
+      _updateOrDisposeSelectionOverlayIfNeeded();
+      _updateOrDisposeSuggestionOverlayIfNeeded();
+    });
 //    _textChangedSinceLastCaretUpdate = true;
 
     setState(() {
       /* We use widget.controller.value in build(). */
     });
     _adjacentLineAction.stopCurrentVerticalRunIfSelectionChanges();
+  }
+
+  void _updateOrDisposeSuggestionOverlayIfNeeded() {
+    if (!_hasFocus) {
+      _suggestionOverlay?.dispose();
+      _suggestionOverlay = null;
+    } else {
+      if (widget.controller.isMentioning) {
+        _suggestionOverlay?.dispose();
+        _suggestionOverlay = MentionSuggestionOverlay(
+          context: context,
+          textEditingValue: textEditingValue,
+          renderObject: renderEditor,
+          debugRequiredFor: widget,
+          query: widget.controller.mentionQuery!,
+          trigger: widget.controller.mentionTrigger!,
+          suggestions:
+              widget.controller.mentionOptions!.suggestionsBuilder.call(
+            widget.controller.mentionTrigger!,
+            widget.controller.mentionQuery!,
+          ),
+          itemBuilder: widget.controller.mentionOptions!.itemBuilder,
+          suggestionSelected: _handleMentionSuggestionSelected,
+        );
+        _suggestionOverlay!.show();
+      } else {
+        if (_suggestionOverlay != null) {
+          _suggestionOverlay!.dispose();
+          _suggestionOverlay = null;
+        }
+      }
+    }
+  }
+
+  void _handleMentionSuggestionSelected(String id, String value) {
+    final controller = widget.controller;
+    final mentionStartIndex =
+        controller.selection.end - controller.mentionQuery!.length - 1;
+    final mentionedTextLength = controller.mentionQuery!.length + 1;
+    final replacementText = '${controller.mentionTrigger!}$value ';
+
+    controller.replaceText(
+        mentionStartIndex, mentionedTextLength, replacementText,
+        selection: TextSelection.collapsed(
+            offset: mentionStartIndex + replacementText.length));
+    controller.formatText(mentionStartIndex, replacementText.length - 1,
+        ParchmentAttribute.mention.fromString(id));
   }
 
   void _handleSelectionChanged(
@@ -1100,6 +1171,7 @@ class RawEditorState extends EditorState
     _cursorController.startOrStopCursorTimerIfNeeded(
         _hasFocus, widget.controller.selection);
     _updateOrDisposeSelectionOverlayIfNeeded();
+    _updateOrDisposeSuggestionOverlayIfNeeded();
     if (_hasFocus) {
       // Listen for changing viewInsets, which indicates keyboard showing up.
       WidgetsBinding.instance.addObserver(this);

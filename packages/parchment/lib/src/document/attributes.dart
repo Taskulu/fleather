@@ -36,6 +36,7 @@ abstract class ParchmentAttributeKey<T> {
 ///   * [LinkAttributeBuilder]
 ///   * [BlockAttributeBuilder]
 ///   * [HeadingAttributeBuilder]
+///
 abstract class ParchmentAttributeBuilder<T>
     implements ParchmentAttributeKey<T> {
   const ParchmentAttributeBuilder._(this.key, this.scope);
@@ -78,6 +79,8 @@ abstract class ParchmentAttributeBuilder<T>
 ///   * [ParchmentAttribute.block]
 ///   * [ParchmentAttribute.direction]
 ///   * [ParchmentAttribute.alignment]
+///   * [NotusAttribute.indent]
+///   * [NotusAttribute.mention]
 class ParchmentAttribute<T> implements ParchmentAttributeBuilder<T> {
   static final Map<String, ParchmentAttributeBuilder> _registry = {
     ParchmentAttribute.bold.key: ParchmentAttribute.bold,
@@ -92,6 +95,7 @@ class ParchmentAttribute<T> implements ParchmentAttributeBuilder<T> {
     ParchmentAttribute.direction.key: ParchmentAttribute.direction,
     ParchmentAttribute.alignment.key: ParchmentAttribute.alignment,
     ParchmentAttribute.indent.key: ParchmentAttribute.indent,
+    ParchmentAttribute.mention.key: ParchmentAttribute.mention,
   };
 
   // Inline attributes
@@ -114,6 +118,9 @@ class ParchmentAttribute<T> implements ParchmentAttributeBuilder<T> {
   /// Link style attribute.
   // ignore: const_eval_throws_exception
   static const link = LinkAttributeBuilder._();
+
+  /// Mention style attribute.
+  static const mention = MentionAttributeBuilder._();
 
   // Line attributes
 
@@ -392,6 +399,20 @@ class _StrikethroughAttribute extends ParchmentAttribute<bool> {
 class _InlineCodeAttribute extends ParchmentAttribute<bool> {
   const _InlineCodeAttribute()
       : super._('c', ParchmentAttributeScope.inline, true);
+}
+
+/// Builder for mention attribute values.
+///
+/// There is no need to use this class directly, consider using
+/// [NotusAttribute.mention] instead.
+class MentionAttributeBuilder extends ParchmentAttributeBuilder<String> {
+  static const _kMention = 'mention';
+
+  const MentionAttributeBuilder._()
+      : super._(_kMention, ParchmentAttributeScope.inline);
+
+  ParchmentAttribute<String> fromString(String value) =>
+      ParchmentAttribute<String>._(key, scope, value);
 }
 
 /// Builder for link attribute values.

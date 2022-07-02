@@ -18,7 +18,7 @@ class FormEmbeddedScreen extends StatefulWidget {
 
 class _FormEmbeddedScreenState extends State<FormEmbeddedScreen> {
   final FleatherController _controller =
-      FleatherController(ParchmentDocument());
+      FleatherController(document: ParchmentDocument());
   final FocusNode _focusNode = FocusNode();
 
   bool _darkTheme = false;

@@ -45,12 +45,12 @@ class _HomePageState extends State<HomePage> {
       final result = await rootBundle.loadString('assets/welcome.note');
       final doc = ParchmentDocument.fromJson(jsonDecode(result));
       setState(() {
-        _controller = FleatherController(doc);
+        _controller = FleatherController(document: doc);
       });
     } catch (error) {
       final doc = ParchmentDocument()..insert(0, 'Empty asset');
       setState(() {
-        _controller = FleatherController(doc);
+        _controller = FleatherController(document: doc);
       });
     }
   }

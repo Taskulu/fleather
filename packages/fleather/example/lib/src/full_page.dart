@@ -42,7 +42,7 @@ enum _Options { darkTheme }
 
 class _FullPageEditorScreenState extends State<FullPageEditorScreen> {
   final FleatherController _controller =
-      FleatherController(ParchmentDocument.fromJson(json.decode(doc)));
+      FleatherController(document: ParchmentDocument.fromJson(json.decode(doc)));
   final FocusNode _focusNode = FocusNode();
   bool _editing = false;
   StreamSubscription<ParchmentChange> _sub;

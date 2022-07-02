@@ -187,6 +187,27 @@ void main() {
       final actual = rule.apply(doc, 0, 'A ');
       expect(actual, isNull);
     });
+
+    test('inserted inside of a mention segment', () {
+      final doc = Delta()
+        ..insert('@User', ParchmentAttribute.mention.fromString('1').toJson());
+      final actual = rule.apply(doc, 2, 'A');
+      final expected = Delta()
+        ..retain(2, ParchmentAttribute.mention.unset.toJson())
+        ..insert('A')
+        ..retain(3, ParchmentAttribute.mention.unset.toJson());
+      expect(actual, expected);
+    });
+
+    test('inserted after mention', () {
+      final doc = Delta()
+        ..insert('@User', ParchmentAttribute.mention.fromString('1').toJson());
+      final actual = rule.apply(doc, 5, 'A');
+      final expected = Delta()
+        ..retain(5)
+        ..insert('A');
+      expect(actual, expected);
+    });
   });
 
   group('$AutoFormatLinksRule', () {
