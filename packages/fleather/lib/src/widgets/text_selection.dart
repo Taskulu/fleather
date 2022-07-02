@@ -638,6 +638,18 @@ abstract class EditorTextSelectionGestureDetectorBuilderDelegate {
   /// Whether the textfield should respond to force presses.
   bool get forcePressEnabled;
 
+  /// Whether the textfield should respond to long presses.
+  bool get longPressEnabled;
+
+  /// Whether the textfield should respond to double taps.
+  bool get doubleTapEnabled;
+
+  /// Whether the textfield should respond to dragging.
+  bool get draggingEnabled;
+
+  /// Whether the textfield should respond to tap.
+  bool get tapEnabled;
+
   /// Whether the user may select text in the textfield.
   bool get selectionEnabled;
 }
@@ -908,18 +920,22 @@ class EditorTextSelectionGestureDetectorBuilder {
   }) {
     return EditorTextSelectionGestureDetector(
       key: key,
-      onTapDown: onTapDown,
+      onTapDown: delegate.tapEnabled ? onTapDown : null,
       onForcePressStart: delegate.forcePressEnabled ? onForcePressStart : null,
       onForcePressEnd: delegate.forcePressEnabled ? onForcePressEnd : null,
-      onSingleTapUp: onSingleTapUp,
-      onSingleTapCancel: onSingleTapCancel,
-      onSingleLongTapStart: onSingleLongTapStart,
-      onSingleLongTapMoveUpdate: onSingleLongTapMoveUpdate,
-      onSingleLongTapEnd: onSingleLongTapEnd,
-      onDoubleTapDown: onDoubleTapDown,
-      onDragSelectionStart: onDragSelectionStart,
-      onDragSelectionUpdate: onDragSelectionUpdate,
-      onDragSelectionEnd: onDragSelectionEnd,
+      onSingleTapUp: delegate.tapEnabled ? onSingleTapUp : null,
+      onSingleTapCancel: delegate.tapEnabled ? onSingleTapCancel : null,
+      onSingleLongTapStart:
+          delegate.longPressEnabled ? onSingleLongTapStart : null,
+      onSingleLongTapMoveUpdate:
+          delegate.longPressEnabled ? onSingleLongTapMoveUpdate : null,
+      onSingleLongTapEnd: delegate.longPressEnabled ? onSingleLongTapEnd : null,
+      onDoubleTapDown: delegate.doubleTapEnabled ? onDoubleTapDown : null,
+      onDragSelectionStart:
+          delegate.draggingEnabled ? onDragSelectionStart : null,
+      onDragSelectionUpdate:
+          delegate.draggingEnabled ? onDragSelectionUpdate : null,
+      onDragSelectionEnd: delegate.draggingEnabled ? onDragSelectionEnd : null,
       behavior: behavior,
       child: child,
     );

@@ -76,6 +76,18 @@ class FleatherField extends StatefulWidget {
   /// the text field from the clipboard.
   final bool enableInteractiveSelection;
 
+  ///Whether the editor should respond to double tap.
+  final bool doubleTapEnabled;
+
+  ///Whether the editor should respond to dragging.
+  final bool draggingEnabled;
+
+  ///Whether the editor should respond to long presses.
+  final bool longPressEnabled;
+
+  ///Whether the editor should respond to tap.
+  final bool tapEnabled;
+
   /// The minimum height to be occupied by this editor.
   ///
   /// This only has effect if [scrollable] is set to `true` and [expands] is
@@ -158,6 +170,10 @@ class FleatherField extends StatefulWidget {
     this.onLaunchUrl,
     this.decoration,
     this.toolbar,
+    this.doubleTapEnabled = true,
+    this.draggingEnabled = true,
+    this.longPressEnabled = true,
+    this.tapEnabled = true,
     this.embedBuilder = defaultFleatherEmbedBuilder,
   }) : super(key: key);
 

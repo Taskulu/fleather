@@ -122,6 +122,18 @@ class FleatherEditor extends StatefulWidget {
   /// the text field from the clipboard.
   final bool enableInteractiveSelection;
 
+  ///Whether the editor should respond to double tap.
+  final bool doubleTapEnabled;
+
+  ///Whether the editor should respond to dragging.
+  final bool draggingEnabled;
+
+  ///Whether the editor should respond to long presses.
+  final bool longPressEnabled;
+
+  ///Whether the editor should respond to tap.
+  final bool tapEnabled;
+
   /// The minimum height to be occupied by this editor.
   ///
   /// This only has effect if [scrollable] is set to `true` and [expands] is
@@ -221,6 +233,10 @@ class FleatherEditor extends StatefulWidget {
     this.keyboardAppearance = Brightness.light,
     this.scrollPhysics,
     this.onLaunchUrl,
+    this.doubleTapEnabled = true,
+    this.draggingEnabled = true,
+    this.longPressEnabled = true,
+    this.tapEnabled = true,
     this.embedBuilder = defaultFleatherEmbedBuilder,
     this.linkActionPickerDelegate = defaultLinkActionPickerDelegate,
   }) : super(key: key);
@@ -239,6 +255,18 @@ class _FleatherEditorState extends State<FleatherEditor>
   // TODO: Add support for forcePress on iOS.
   @override
   bool get forcePressEnabled => false;
+
+  @override
+  bool get doubleTapEnabled => widget.doubleTapEnabled;
+
+  @override
+  bool get draggingEnabled => widget.draggingEnabled;
+
+  @override
+  bool get longPressEnabled => widget.longPressEnabled;
+
+  @override
+  bool get tapEnabled => widget.tapEnabled;
 
   @override
   bool get selectionEnabled => widget.enableInteractiveSelection;
