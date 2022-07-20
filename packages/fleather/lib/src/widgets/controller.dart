@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/cupertino.dart';
@@ -14,7 +15,7 @@ List<String> _insertionToggleableStyleKeys = [
   ParchmentAttribute.inlineCode.key,
 ];
 
-typedef MentionSuggestionsBuilder = Map<String, String> Function(
+typedef MentionSuggestionsBuilder = Future<Map<String, String>> Function(
     String trigger, String query);
 
 typedef MentionSuggestionItemBuilder = Widget Function(

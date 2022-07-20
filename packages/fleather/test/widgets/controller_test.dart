@@ -196,7 +196,7 @@ void main() {
     test('checking for mention', () {
       controller.mentionOptions = MentionOptions(
         mentionTriggers: ['@', '#'],
-        suggestionsBuilder: (_, __) => {},
+        suggestionsBuilder: (_, __) async => {},
         itemBuilder: (_, __, ___, ____) => Container(),
       );
       var change = Delta()..insert('@a');

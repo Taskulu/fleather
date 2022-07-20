@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fleather/src/rendering/editor.dart';
 import 'package:fleather/src/widgets/controller.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +8,7 @@ class MentionSuggestionOverlay {
   final BuildContext context;
   final RenderEditor renderObject;
   final Widget debugRequiredFor;
-  final Map<String, String> suggestions;
+  final Future<Map<String, String>> suggestions;
   final String query, trigger;
   final TextEditingValue textEditingValue;
   final Function(String, String)? suggestionSelected;
@@ -27,14 +29,23 @@ class MentionSuggestionOverlay {
 
   void show() {
     overlayEntry = OverlayEntry(
-        builder: (context) => _MentionSuggestionList(
-              renderObject: renderObject,
-              suggestions: suggestions,
-              textEditingValue: textEditingValue,
-              suggestionSelected: suggestionSelected,
-              itemBuilder: itemBuilder,
-              query: query,
-              trigger: trigger,
+        builder: (context) => FutureBuilder<Map<String, String>>(
+              future: suggestions,
+              builder: (context, snapshot) {
+                final data = snapshot.data;
+                if (data == null) {
+                  return const SizedBox();
+                }
+                return _MentionSuggestionList(
+                  renderObject: renderObject,
+                  suggestions: data,
+                  textEditingValue: textEditingValue,
+                  suggestionSelected: suggestionSelected,
+                  itemBuilder: itemBuilder,
+                  query: query,
+                  trigger: trigger,
+                );
+              },
             ));
     Overlay.of(context, rootOverlay: true, debugRequiredFor: debugRequiredFor)
         ?.insert(overlayEntry!);

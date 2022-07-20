@@ -14,6 +14,21 @@ import 'layout_expanded.dart';
 import 'layout_scrollable.dart';
 import 'settings.dart';
 
+const mentionData = {'1': 'Amir', '2': 'Amin', '3': 'Nima', '4': 'Reza'};
+
+MentionOptions mentionOptions = MentionOptions(
+  mentionTriggers: ['@', '#'],
+  suggestionsBuilder: (trigger, query) async {
+    if (trigger == '@') {
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
+    return Map.from(mentionData)
+      ..removeWhere((key, value) => query.isNotEmpty && !value.contains(query));
+  },
+  itemBuilder: (context, id, trigger, query) =>
+      ListTile(title: Text(mentionData[id])),
+);
+
 class HomePage extends StatefulWidget {
   const HomePage({Key key}) : super(key: key);
 
@@ -45,12 +60,14 @@ class _HomePageState extends State<HomePage> {
       final result = await rootBundle.loadString('assets/welcome.note');
       final doc = ParchmentDocument.fromJson(jsonDecode(result));
       setState(() {
-        _controller = FleatherController(document: doc);
+        _controller =
+            FleatherController(document: doc, mentionOptions: mentionOptions);
       });
     } catch (error) {
       final doc = ParchmentDocument()..insert(0, 'Empty asset');
       setState(() {
-        _controller = FleatherController(document: doc);
+        _controller =
+            FleatherController(document: doc, mentionOptions: mentionOptions);
       });
     }
   }
