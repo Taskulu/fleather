@@ -168,7 +168,10 @@ class FleatherController extends ChangeNotifier {
         _selection.copyWith(baseOffset: base, extentOffset: extent);
     if (_selection != adjustedSelection) {
       _updateSelectionSilent(adjustedSelection, source: source);
+    } else {
+      _checkForMentionTriggers();
     }
+
     notifyListeners();
   }
 

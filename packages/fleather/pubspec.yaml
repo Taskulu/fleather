@@ -13,10 +13,7 @@ dependencies:
   collection: ^1.16.0
   quill_delta: ^3.0.0-nullsafety.2
   parchment:
-    git:
-      url: https://github.com/Taskulu/fleather
-      path: packages/parchment
-      ref: taskulu_edition
+    path: ../parchment
   characters: ^1.2.0
 
 dev_dependencies:

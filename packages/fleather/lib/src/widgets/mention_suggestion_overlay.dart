@@ -57,8 +57,10 @@ class MentionSuggestionOverlay {
 
   void dispose() {
     hide();
-    overlayEntry?.dispose();
-    overlayEntry = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      overlayEntry?.dispose();
+      overlayEntry = null;
+    });
   }
 
   void updateForScroll() {
