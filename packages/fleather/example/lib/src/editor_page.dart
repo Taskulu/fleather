@@ -25,7 +25,7 @@ class EditorPageState extends State<EditorPage> {
     _focusNode = FocusNode();
     _loadDocument().then((document) {
       setState(() {
-        _controller = FleatherController(document);
+        _controller = FleatherController(document: document);
       });
     });
   }

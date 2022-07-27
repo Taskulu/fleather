@@ -25,7 +25,7 @@ class EditorSandBox {
   }) {
     focusNode ??= FocusNode();
     document ??= ParchmentDocument.fromDelta(delta);
-    var controller = FleatherController(document);
+    var controller = FleatherController(document: document);
 
     Widget widget = _FleatherSandbox(
       controller: controller,

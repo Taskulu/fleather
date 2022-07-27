@@ -284,7 +284,8 @@ class _TextLineState extends State<TextLine> {
     if (nodeStyle.containsSame(ParchmentAttribute.italic)) {
       result = _mergeTextStyleWithDecoration(result, theme.italic);
     }
-    if (nodeStyle.contains(ParchmentAttribute.link)) {
+    if (nodeStyle.contains(ParchmentAttribute.link) ||
+        nodeStyle.contains(ParchmentAttribute.mention)) {
       result = _mergeTextStyleWithDecoration(result, theme.link);
     }
     if (nodeStyle.contains(ParchmentAttribute.underline)) {

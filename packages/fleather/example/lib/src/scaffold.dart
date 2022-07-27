@@ -65,13 +65,13 @@ class _DemoScaffoldState extends State<DemoScaffold> {
           await rootBundle.loadString('assets/${widget.documentFilename}');
       final doc = ParchmentDocument.fromJson(jsonDecode(result));
       setState(() {
-        _controller = FleatherController(doc);
+        _controller = FleatherController(document: doc);
         _loading = false;
       });
     } catch (error) {
       final doc = ParchmentDocument()..insert(0, 'Empty asset');
       setState(() {
-        _controller = FleatherController(doc);
+        _controller = FleatherController(document: doc);
         _loading = false;
       });
     }
@@ -84,14 +84,14 @@ class _DemoScaffoldState extends State<DemoScaffold> {
       final data = await file.readAsString();
       final doc = ParchmentDocument.fromJson(jsonDecode(data));
       setState(() {
-        _controller = FleatherController(doc);
+        _controller = FleatherController(document: doc);
         _loading = false;
         _canSave = true;
       });
     } else {
       final doc = ParchmentDocument()..insert(0, 'Empty asset');
       setState(() {
-        _controller = FleatherController(doc);
+        _controller = FleatherController(document: doc);
         _loading = false;
         _canSave = true;
       });

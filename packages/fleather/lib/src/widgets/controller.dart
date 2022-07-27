@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/cupertino.dart';
@@ -14,10 +15,47 @@ List<String> _insertionToggleableStyleKeys = [
   ParchmentAttribute.inlineCode.key,
 ];
 
+typedef MentionSuggestionsBuilder = Future<Map<String, String>> Function(
+    String trigger, String query);
+
+typedef MentionSuggestionItemBuilder = Widget Function(
+    BuildContext context, String id, String trigger, String query);
+
+class MentionOptions {
+  final Iterable<String> mentionTriggers;
+  final MentionSuggestionsBuilder suggestionsBuilder;
+  final MentionSuggestionItemBuilder itemBuilder;
+  final Function(String, String)? onMentionClicked;
+
+  MentionOptions({
+    required this.mentionTriggers,
+    required this.suggestionsBuilder,
+    required this.itemBuilder,
+    this.onMentionClicked,
+  }) : assert(mentionTriggers.isNotEmpty);
+}
+
 class FleatherController extends ChangeNotifier {
-  FleatherController([ParchmentDocument? document])
+  MentionOptions? _mentionOptions;
+  String? _mentionQuery;
+  String? _mentionTrigger;
+
+  FleatherController(
+      {ParchmentDocument? document, MentionOptions? mentionOptions})
       : document = document ?? ParchmentDocument(),
-        _selection = const TextSelection.collapsed(offset: 0);
+        _selection = const TextSelection.collapsed(offset: 0),
+        _mentionOptions = mentionOptions;
+
+  MentionOptions? get mentionOptions => _mentionOptions;
+
+  set mentionOptions(MentionOptions? value) {
+    _mentionOptions = value;
+    _checkForMentionTriggers();
+  }
+
+  String? get mentionQuery => _mentionQuery;
+
+  String? get mentionTrigger => _mentionTrigger;
 
   /// Document managed by this controller.
   final ParchmentDocument document;
@@ -130,7 +168,10 @@ class FleatherController extends ChangeNotifier {
         _selection.copyWith(baseOffset: base, extentOffset: extent);
     if (_selection != adjustedSelection) {
       _updateSelectionSilent(adjustedSelection, source: source);
+    } else {
+      _checkForMentionTriggers();
     }
+
     notifyListeners();
   }
 
@@ -191,6 +232,46 @@ class FleatherController extends ChangeNotifier {
     _selection = value;
 //    _lastChangeSource = source;
     _ensureSelectionBeforeLastBreak();
+    _checkForMentionTriggers();
+  }
+
+  bool get isMentioning => _mentionTrigger != null;
+
+  /// Checks if collapsed cursor is after a mention trigger
+  /// which isn't submitted yet
+  void _checkForMentionTriggers() {
+    _mentionQuery = null;
+    _mentionTrigger = null;
+
+    if (mentionOptions == null || !selection.isCollapsed) {
+      return;
+    }
+
+    final plainText = document.toPlainText();
+    final indexOfLastMentionTrigger = plainText
+        .substring(0, selection.end)
+        .lastIndexOf(RegExp(mentionOptions!.mentionTriggers.join('|')));
+
+    if (indexOfLastMentionTrigger < 0) {
+      return;
+    }
+
+    if (plainText
+        .substring(indexOfLastMentionTrigger, selection.end)
+        .contains(RegExp(r'\n'))) {
+      return;
+    }
+
+    final isMentionSubmitted =
+        document.collectStyle(indexOfLastMentionTrigger, 0);
+    if (isMentionSubmitted.contains(ParchmentAttribute.mention)) {
+      return;
+    }
+
+    _mentionQuery =
+        plainText.substring(indexOfLastMentionTrigger + 1, selection.end);
+    _mentionTrigger = plainText.substring(
+        indexOfLastMentionTrigger, indexOfLastMentionTrigger + 1);
   }
 
   // Ensures that selection does not include last line break which
